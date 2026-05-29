@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Launcher</string>
+    <string name="search_apps">Apps suchen</string>
+    <string name="pin_app">Zu Favoriten hinzufügen</string>
+    <string name="unpin_app">Aus Favoriten entfernen</string>
+    <string name="uninstall_app">Deinstallieren</string>
+    <string name="app_info">App-Info</string>
+    <string name="set_default_title">Standard-Launcher festlegen</string>
+    <string name="set_default_message">Damit der Launcher beim Druck auf den Home-Button erscheint, muss er als Standard-Launcher festgelegt werden.</string>
+    <string name="set_default_confirm">Einstellungen öffnen</string>
+    <string name="set_default_dismiss">Später</string>
+    <string name="no_results">Keine Treffer</string>
+    <string name="app_not_found">App nicht gefunden</string>
+</resources>
