@@ -54,6 +54,16 @@ fun LauncherRoot() {
         scope.launch { pagerState.animateScrollToPage(0) }
     }
 
+    // Home-Geste (Wisch nach oben vom unteren Rand) → auch zurück zu Home-Page animieren.
+    // Wird gefeuert von MainActivity.onNewIntent.
+    LaunchedEffect(Unit) {
+        HomeGestureSignal.events.collect {
+            if (pagerState.currentPage != 0) {
+                pagerState.animateScrollToPage(0)
+            }
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         HorizontalPager(
             state = pagerState,

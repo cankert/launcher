@@ -1,5 +1,6 @@
 package de.dm.launcher
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import de.dm.launcher.ui.HomeGestureSignal
 import de.dm.launcher.ui.LauncherRoot
 import de.dm.launcher.ui.theme.LauncherTheme
 
@@ -31,6 +33,15 @@ class MainActivity : ComponentActivity() {
                     LauncherRoot()
                 }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // Wird gefeuert wenn der User die Home-Geste/-Taste auslöst, während unser Launcher
+        // bereits im Vordergrund ist. LauncherRoot lauscht und animiert zurück auf Home-Page.
+        if (intent.hasCategory(Intent.CATEGORY_HOME)) {
+            HomeGestureSignal.fire()
         }
     }
 
