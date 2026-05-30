@@ -1,6 +1,7 @@
 package de.dm.launcher.data
 
 import android.app.AppOpsManager
+import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -72,19 +73,36 @@ private fun loadStatsForToday(context: Context): Map<String, Long> {
     }.timeInMillis
     val now = System.currentTimeMillis()
 
-    val stats = usm.queryUsageStats(
-        UsageStatsManager.INTERVAL_DAILY,
-        midnight,
-        now
-    ) ?: return emptyMap()
+    // queryEvents liefert die rohen Foreground/Background-Events in Echtzeit (im Gegensatz
+    // zu queryUsageStats, dessen Tages-Bucket erst alle paar Minuten aktualisiert wird).
+    val events = usm.queryEvents(midnight, now) ?: return emptyMap()
+    val totals = HashMap<String, Long>()
+    val foregroundSince = HashMap<String, Long>() // pkg → timestamp wann Foreground begann
+    val event = UsageEvents.Event()
 
-    // Aggregieren über alle Stats des Tages (manche Geräte liefern mehrere Einträge pro Pkg)
-    val map = HashMap<String, Long>()
-    for (s in stats) {
-        if (s.totalTimeInForeground <= 0) continue
-        map.merge(s.packageName, s.totalTimeInForeground) { a, b -> maxOf(a, b) }
+    while (events.hasNextEvent()) {
+        events.getNextEvent(event)
+        val pkg = event.packageName ?: continue
+        when (event.eventType) {
+            UsageEvents.Event.MOVE_TO_FOREGROUND,
+            UsageEvents.Event.ACTIVITY_RESUMED -> {
+                foregroundSince[pkg] = event.timeStamp
+            }
+            UsageEvents.Event.MOVE_TO_BACKGROUND,
+            UsageEvents.Event.ACTIVITY_PAUSED,
+            UsageEvents.Event.ACTIVITY_STOPPED -> {
+                val start = foregroundSince.remove(pkg) ?: continue
+                val duration = (event.timeStamp - start).coerceAtLeast(0)
+                totals.merge(pkg, duration) { a, b -> a + b }
+            }
+        }
     }
-    return map
+    // Apps die JETZT noch im Vordergrund sind: laufenden Session-Anteil dazurechnen
+    for ((pkg, start) in foregroundSince) {
+        val duration = (now - start).coerceAtLeast(0)
+        totals.merge(pkg, duration) { a, b -> a + b }
+    }
+    return totals
 }
 
 fun formatUsage(millis: Long): String {
