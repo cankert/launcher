@@ -85,6 +85,7 @@ fun LauncherRoot() {
 
         DefaultLauncherPrompt()
         NotificationAccessPrompt()
+        UsageAccessPrompt()
 
         actionTarget?.let { target ->
             AppActionSheet(

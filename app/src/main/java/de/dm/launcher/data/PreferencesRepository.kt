@@ -15,6 +15,7 @@ class PreferencesRepository(private val context: Context) {
     private val pinnedKey = stringPreferencesKey("pinned_packages_ordered")
     private val askedDefaultKey = booleanPreferencesKey("asked_default_launcher")
     private val askedNotifKey = booleanPreferencesKey("asked_notif_access")
+    private val askedUsageKey = booleanPreferencesKey("asked_usage_access")
 
     val pinnedPackages: Flow<List<String>> = context.dataStore.data.map { prefs ->
         prefs[pinnedKey]?.split(SEPARATOR)?.filter { it.isNotEmpty() } ?: emptyList()
@@ -59,6 +60,16 @@ class PreferencesRepository(private val context: Context) {
     suspend fun setAskedNotifAccess() {
         context.dataStore.edit { prefs ->
             prefs[askedNotifKey] = true
+        }
+    }
+
+    val askedUsageAccess: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[askedUsageKey] ?: false
+    }
+
+    suspend fun setAskedUsageAccess() {
+        context.dataStore.edit { prefs ->
+            prefs[askedUsageKey] = true
         }
     }
 

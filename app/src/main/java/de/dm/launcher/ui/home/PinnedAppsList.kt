@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -34,6 +35,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import de.dm.launcher.data.AppRepository
 import de.dm.launcher.data.PreferencesRepository
+import de.dm.launcher.data.formatUsage
+import de.dm.launcher.data.rememberTodayUsageMinutes
 import de.dm.launcher.domain.LaunchAppUseCase
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -49,6 +52,7 @@ fun PinnedAppsList(
     val prefs = remember(context) { PreferencesRepository(context) }
     val repo = remember(context) { AppRepository(context) }
     val pinnedPersisted by prefs.pinnedPackages.collectAsState(initial = emptyList())
+    val usageMillis by rememberTodayUsageMinutes(context)
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
     val itemSpacingPx = with(density) { ITEM_SPACING.toPx() }
@@ -98,15 +102,11 @@ fun PinnedAppsList(
                     label = "shift-$pkg"
                 )
 
-                Text(
-                    text = label,
-                    color = if (isDragged) Color.White.copy(alpha = 0.55f) else Color.White,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Normal,
+                val usageText = formatUsage(usageMillis[pkg] ?: 0L)
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .onSizeChanged { size ->
-                            // Höhe immer aktualisieren — verhindert Off-by-one durch Schriftgrößen
                             itemHeightPx = size.height.toFloat()
                         }
                         .graphicsLayer {
@@ -157,8 +157,24 @@ fun PinnedAppsList(
                         .clickable(enabled = !isDragged) {
                             LaunchAppUseCase.launchApp(context, pkg)
                         }
-                        .padding(vertical = 4.dp)
-                )
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = label,
+                        color = if (isDragged) Color.White.copy(alpha = 0.55f) else Color.White,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Normal
+                    )
+                    if (usageText.isNotEmpty()) {
+                        Text(
+                            text = usageText,
+                            color = Color.White.copy(alpha = if (isDragged) 0.25f else 0.5f),
+                            fontSize = 13.sp,
+                            modifier = Modifier.padding(start = 10.dp, top = 4.dp)
+                        )
+                    }
+                }
             }
         }
     }
